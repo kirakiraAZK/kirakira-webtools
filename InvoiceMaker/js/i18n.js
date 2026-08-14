@@ -138,6 +138,7 @@ const TRANSLATIONS = {
     preview_email: 'Preview Email (HTML)',
     preview_hint: 'Preview of the email sent to customer.',
     method: 'Method',
+    support_me: 'Support my work! ☕',
   },
 
   id: {
@@ -274,6 +275,7 @@ const TRANSLATIONS = {
     preview_email: 'Pratinjau Email (HTML)',
     preview_hint: 'Pratinjau email yang dikirim ke pelanggan.',
     method: 'Metode',
+    support_me: 'Dukung karya saya! ☕',
   }
 };
 

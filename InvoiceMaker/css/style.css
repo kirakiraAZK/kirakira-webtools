@@ -125,6 +125,46 @@ pre.tmpl{
 .shipping-fee-row input{width:100px;padding:4px 6px;font-size:12px;border:1.5px solid var(--ink);}
 
 /* ============================================================
+   FOOTER
+   ============================================================ */
+.site-footer {
+  margin-top: 40px;
+  padding: 24px 0 10px;
+  border-top: 3px dashed var(--ink);
+  text-align: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.site-footer .footer-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.donate-btn {
+  background: var(--pink);
+  color: var(--ink);
+  text-decoration: none;
+  padding: 6px 14px;
+  border: 2px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  transition: transform 0.08s, box-shadow 0.08s;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+.donate-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--ink);
+}
+.donate-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
+/* ============================================================
    NAVIGATION BAR (shared across all pages)
    ============================================================ */
 .nav-bar{
