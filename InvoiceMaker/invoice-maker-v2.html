@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KIRAKIRAAZK WEBTOOLS — Invoice Maker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --frame:#F2EFE4;
+    --card:#FFFFFF;
+    --panel:#FFFFFF;
+    --ink:#0F0F0F;
+    --ink-soft:#0F0F0F;
+    --line:#0F0F0F;
+    --yellow:#FFD400;
+    --pink:#FF5CA8;
+    --cyan:#4EC9FF;
+    --lime:#B6FF3B;
+    --ok:#1FA463; --ok-soft:#B6FF3B;
+    --warn:#FF3B3B; --warn-soft:#FFB4B4;
+    --wait:#0F0F0F; --wait-soft:#FFD400;
+    --review:#FF8A00; --review-soft:#FFD9AD;
+    --shadow: 5px 5px 0 var(--ink);
+    --shadow-sm: 3px 3px 0 var(--ink);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--frame);font-family:'Inter',sans-serif;color:var(--ink);
+    background-image: radial-gradient(#00000014 1.4px, transparent 1.4px);
+    background-size: 20px 20px;
+  }
+  .frame{max-width:1220px;margin:0 auto;padding:20px;}
+  .screen-label{
+    display:inline-block;color:var(--ink);font-size:11px;letter-spacing:2px;text-transform:uppercase;
+    padding:4px 10px;font-family:'JetBrains Mono',monospace;font-weight:700;
+    background:var(--yellow);border:3px solid var(--ink);box-shadow:var(--shadow-sm);margin-bottom:14px;
+  }
+  .card{background:var(--card);border:3px solid var(--ink);box-shadow:8px 8px 0 var(--ink);border-radius:0;padding:24px 26px 30px;min-height:70vh;}
+  .topbar{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--ink);padding-bottom:16px;margin-bottom:24px;flex-wrap:wrap;gap:10px;}
+  .brand{display:flex;align-items:center;gap:8px;}
+  .brand .kira{font-size:11px;font-weight:700;letter-spacing:1px;background:var(--ink);color:#fff;padding:3px 6px;font-family:'JetBrains Mono',monospace;}
+  .brand .webtools{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;letter-spacing:0.2px;}
+  .title{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;letter-spacing:0.2px;background:var(--pink);border:3px solid var(--ink);padding:4px 14px;box-shadow:var(--shadow-sm);}
+  .datetime{font-family:'JetBrains Mono',monospace;font-size:11px;text-align:right;color:var(--ink);line-height:1.6;font-weight:600;}
+  h2.section{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;margin:0 0 12px 0;text-transform:none;display:inline-block;border-bottom:4px solid var(--cyan);padding-bottom:3px;}
+  .grid3{display:grid;grid-template-columns:1.1fr 0.8fr 1fr;gap:26px;margin-bottom:26px;}
+  @media(max-width:900px){.grid3{grid-template-columns:1fr;}}
+  label{display:block;font-size:11px;font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:5px;margin-top:10px;}
+  input[type=text],input[type=number],input[type=email],select,textarea{
+    width:100%;padding:8px 9px;border:2.5px solid var(--ink);border-radius:0;font-size:13px;font-family:'Inter',sans-serif;background:#fff;font-weight:500;
+  }
+  input[type=text]:focus,input[type=number]:focus,input[type=email]:focus,select:focus,textarea:focus{outline:3px solid var(--cyan);outline-offset:1px;}
+  input[type=file]{font-size:12px;font-weight:600;}
+  textarea{resize:vertical;}
+  .btn{
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12.5px;letter-spacing:0.2px;
+    background:var(--yellow);color:var(--ink);border:2.5px solid var(--ink);padding:9px 16px;border-radius:0;cursor:pointer;
+    box-shadow:var(--shadow-sm);transition:transform 0.08s, box-shadow 0.08s;
+  }
+  .btn:hover:not(:disabled){transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink);}
+  .btn:active:not(:disabled){transform:translate(1px,1px);box-shadow:1px 1px 0 var(--ink);}
+  .btn.dark{background:var(--ink);color:#fff;}
+  .btn.ghost{background:#fff;color:var(--ink);}
+  .btn.small{padding:5px 10px;font-size:11px;}
+  .btn:disabled{opacity:0.35;cursor:not-allowed;box-shadow:none;}
+  .badge{font-size:9.5px;font-weight:700;letter-spacing:0.4px;background:var(--cyan);border:2px solid var(--ink);padding:3px 7px;border-radius:0;margin-left:6px;text-transform:uppercase;cursor:pointer;box-shadow:2px 2px 0 var(--ink);}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th{text-align:left;font-family:'JetBrains Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:0.4px;color:#fff;background:var(--ink);border:2px solid var(--ink);padding:8px 7px;white-space:nowrap;}
+  td{padding:8px 7px;border:1.5px solid var(--ink);vertical-align:middle;}
+  tbody tr:nth-child(even){background:#F7F4E8;}
+  .num{font-family:'JetBrains Mono',monospace;text-align:right;white-space:nowrap;font-weight:600;}
+  .icon-btn{background:var(--lime);border:2px solid var(--ink);cursor:pointer;font-size:14px;padding:3px 8px;box-shadow:2px 2px 0 var(--ink);}
+  .icon-btn:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink);}
+  .icon-btn:disabled{opacity:0.3;box-shadow:none;cursor:not-allowed;}
+  .status-pill{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:4px 10px;border:2px solid var(--ink);border-radius:0;display:inline-block;box-shadow:2px 2px 0 var(--ink);}
+  .status-pill.ok{background:var(--ok-soft);color:var(--ink);}
+  .status-pill.warn{background:var(--warn-soft);color:var(--ink);}
+  .status-pill.wait{background:var(--wait-soft);color:var(--ink);}
+  .status-pill.review{background:var(--review-soft);color:var(--ink);}
+  .table-wrap{overflow-x:auto;margin-top:18px;border:3px solid var(--ink);box-shadow:var(--shadow);}
+  .send-all-row{display:flex;justify-content:flex-end;margin-top:22px;}
+  .btn.sentall{background:var(--lime);color:var(--ink);border:3px solid var(--ink);font-size:17px;font-weight:700;padding:16px 26px;box-shadow:6px 6px 0 var(--ink);}
+  .btn.sentall:hover:not(:disabled){transform:translate(-2px,-2px);box-shadow:8px 8px 0 var(--ink);}
+  .hint{font-size:11.5px;color:var(--ink);line-height:1.5;margin:4px 0 8px;font-weight:500;}
+  .back-row{margin-top:26px;}
+  .item-block{border:2.5px solid var(--ink);border-radius:0;padding:12px 14px;margin-bottom:12px;box-shadow:var(--shadow-sm);background:#fff;}
+  .item-head{display:flex;gap:8px;align-items:center;}
+  .item-head input{flex:2;}
+  .item-head input.price{flex:1;}
+  .variation-row{display:flex;gap:8px;align-items:center;margin:8px 0 0 18px;}
+  .variation-row input{flex:1;}
+  .variation-row input.price{flex:0.7;}
+  .step{border-top:3px dashed var(--ink);padding:18px 0;}
+  .step:first-child{border-top:none;}
+  .step-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;margin-bottom:5px;}
+  .step-body{font-size:12.5px;color:var(--ink);line-height:1.6;margin-bottom:10px;font-weight:500;}
+  .tmpl-wrap{position:relative;margin-bottom:6px;}
+  pre.tmpl{background:var(--yellow);border:2.5px solid var(--ink);padding:12px;padding-right:80px;font-family:'JetBrains Mono',monospace;font-size:11.5px;white-space:pre-wrap;border-radius:0;box-shadow:var(--shadow-sm);margin:0;}
+  .copy-btn{position:absolute;top:8px;right:8px;background:var(--ink);color:#fff;border:none;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:4px 10px;cursor:pointer;letter-spacing:0.5px;transition:opacity 0.15s;}
+  .copy-btn:hover{opacity:0.75;}
+  .step-img{width:100%;max-width:560px;border:2.5px solid var(--ink);box-shadow:var(--shadow-sm);margin:10px 0;display:block;background:#f5f5f5;min-height:100px;object-fit:contain;}
+  .step-img-placeholder{width:100%;max-width:560px;border:2.5px dashed var(--ink);box-shadow:var(--shadow-sm);margin:10px 0;display:flex;align-items:center;justify-content:center;min-height:100px;background:#f9f7ee;color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;text-align:center;padding:18px;gap:8px;}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,15,15,0.55);z-index:40;align-items:center;justify-content:center;}
+  .modal-overlay.active{display:flex;}
+  .modal-box{background:#fff;max-width:540px;width:90%;padding:24px;border:3px solid var(--ink);box-shadow:8px 8px 0 var(--ink);max-height:85vh;overflow-y:auto;}
+  .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 20px;border:2.5px solid var(--ink);box-shadow:4px 4px 0 var(--pink);font-size:13px;font-weight:600;display:none;z-index:60;}
+  .field-ok{border-color:var(--ok) !important;background:var(--ok-soft) !important;}
+  .row{display:flex;gap:12px;flex-wrap:wrap;}
+  .row>div{flex:1;min-width:140px;}
+  .header-img-preview{width:100%;max-height:80px;object-fit:contain;object-position:left center;border:2px solid var(--ink);margin-top:8px;display:none;background:#f5f5f5;}
+  .shipping-fee-row{background:#fffbe6;border:2px solid var(--ink);padding:6px 10px;margin-top:4px;display:flex;align-items:center;gap:6px;}
+  .shipping-fee-row input{width:100px;padding:4px 6px;font-size:12px;border:1.5px solid var(--ink);}
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="screen-label" id="screenLabel">MAIN</div>
+
+  <!-- ================= MAIN ================= -->
+  <div class="card" id="screen-main">
+    <div class="topbar">
+      <div class="brand"><span class="kira">KIRAKIRAAZK</span><span class="webtools">WEBTOOLS</span></div>
+      <div class="title">INVOICE MAKER</div>
+      <div class="datetime">
+        <div style="margin-bottom:5px;">
+          <label style="display:inline;margin:0;font-size:10px;">Currency</label>
+          <select id="currencySelect" onchange="changeCurrency(this.value)" style="width:auto;padding:2px 5px;font-size:11px;display:inline-block;">
+            <option value="IDR">IDR</option>
+            <option value="USD">USD</option>
+            <option value="SGD">SGD</option>
+            <option value="MYR">MYR</option>
+            <option value="JPY">JPY</option>
+            <option value="PHP">PHP</option>
+          </select>
+        </div>
+        <div id="liveClock"></div>
+      </div>
+    </div>
+
+    <div class="grid3">
+      <div>
+        <h2 class="section">Shop Details</h2>
+        <label>Custom Header (gambar)</label>
+        <input type="file" id="shopHeaderImg" accept="image/*" onchange="handleHeaderImage(event)">
+        <img id="headerImgPreview" class="header-img-preview" alt="Header preview">
+        <label>Shop Name</label>
+        <input type="text" id="shopName" placeholder="Toko">
+        <label>Invoice Prefix</label>
+        <input type="text" id="invoicePrefix" placeholder="INV-TOKO-">
+        <label>Payment Info</label>
+        <textarea id="paymentInfo" rows="3" placeholder="BCA 1234567890 a.n. ..."></textarea>
+        <button class="btn dark" style="margin-top:10px;" onclick="saveShopDetails()">Simpan Shop Details</button>
+      </div>
+
+      <div>
+        <h2 class="section">Item Manager</h2>
+        <button class="btn small" onclick="goTo('item-manager')">MANAGE ✎</button>
+        <p class="hint" style="margin-top:10px;" id="itemManagerSummary">Belum ada item.</p>
+
+        <h2 class="section" style="margin-top:22px;">Spreadsheets Config</h2>
+        <input type="file" id="sheetUpload" accept=".xlsx,.xls" onchange="handleSheetUpload(event)" style="margin-bottom:6px;">
+        <button class="btn small" id="sheetConfigBtn" onclick="goTo('sheet-config')" disabled>CONFIG ⚙</button>
+        <p class="hint" style="margin-top:6px;" id="sheetSummary">Belum ada file diupload.</p>
+      </div>
+
+      <div>
+        <h2 class="section">EmailJS Config <span class="badge" onclick="goTo('guided-config')">GUIDED CONFIG</span></h2>
+        <label>Service ID</label>
+        <input type="text" id="ejsService" placeholder="service-xxxxxxx">
+        <label>Template ID (Invoice)</label>
+        <input type="text" id="ejsTemplateInvoice" placeholder="template-xxxxxxx">
+        <label>Template ID (Paid)</label>
+        <input type="text" id="ejsTemplatePaid" placeholder="template-yyyyyyy">
+        <label>Public Key</label>
+        <input type="text" id="ejsPublicKey" placeholder="Public key from EmailJS">
+        <button class="btn dark" style="margin-top:10px;" onclick="saveEmailjsConfig()">Simpan</button>
+        <button class="btn ghost" style="margin-top:10px;" onclick="sendTestEmail()">Tes Kirim</button>
+        <p class="hint" id="ejsStatus"></p>
+      </div>
+    </div>
+
+    <div id="orderTableWrap" class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>No</th><th>Name</th><th>Email</th><th>Mail Order</th><th>Address</th>
+            <th>Shipping</th><th>Grand Total</th><th>Detail</th><th>Send</th><th>Status</th>
+            <th>Payment</th><th>Kirim Paid</th>
+          </tr>
+        </thead>
+        <tbody id="orderTableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="send-all-row" id="sendAllRow">
+      <button class="btn sentall" id="sendAllBtn" onclick="sendAllPending()">SENT ALL ➤</button>
+    </div>
+  </div>
+
+  <!-- ================= ITEM MANAGER ================= -->
+  <div class="card" id="screen-item-manager" style="display:none;">
+    <h2 class="title" style="text-align:center;margin-bottom:20px;">ITEM MANAGER</h2>
+    <div id="itemsContainer"></div>
+    <div class="back-row" style="display:flex;gap:10px;justify-content:center;">
+      <button class="btn dark" onclick="addItem()">Add Item</button>
+      <button class="btn ghost" onclick="goTo('main')">Back</button>
+    </div>
+  </div>
+
+  <!-- ================= SHEET CONFIG (mapping) ================= -->
+  <div class="card" id="screen-sheet-config" style="display:none;">
+    <h2 class="title" style="text-align:center;margin-bottom:20px;">SPREADSHEET CONFIG</h2>
+    <p class="hint">Langkah 1: cocokkan kolom data pelanggan. Langkah 2: untuk tiap kolom lain, pilih item/variasi mana yang cocok (kolom yang tidak relevan bisa dilewati).</p>
+    <div class="grid3" style="grid-template-columns:1fr 1fr;">
+      <div><label>Kolom Nama *</label><select id="mapNama" onchange="renderItemColumnMapping()"></select></div>
+      <div><label>Kolom Email *</label><select id="mapEmail" onchange="renderItemColumnMapping()"></select></div>
+      <div><label>Kolom Metode Pengambilan (opsional)</label><select id="mapMailOrder" onchange="renderItemColumnMapping()"><option value="">— tidak ada —</option></select></div>
+      <div><label>Kolom Alamat (opsional)</label><select id="mapAddress" onchange="renderItemColumnMapping()"><option value="">— tidak ada —</option></select></div>
+    </div>
+    <h2 class="section" style="margin-top:6px;">Pemetaan Kolom Item</h2>
+    <p class="hint">Kolom di bawah ini adalah sisa kolom di file Anda (di luar 4 kolom di atas). Pilih item/variasi yang cocok untuk tiap kolom jumlah barang.</p>
+    <div class="table-wrap" style="margin-top:10px;">
+      <table>
+        <thead><tr><th>Nama Kolom di File</th><th>Dipetakan ke Item</th></tr></thead>
+        <tbody id="itemColumnMappingBody"></tbody>
+      </table>
+    </div>
+    <div class="back-row" style="display:flex;gap:10px;">
+      <button class="btn dark" onclick="processOrders()">Proses jadi Invoice</button>
+      <button class="btn ghost" onclick="goTo('main')">Back</button>
+    </div>
+  </div>
+
+  <!-- ================= GUIDED CONFIG ================= -->
+  <div class="card" id="screen-guided-config" style="display:none;">
+    <h2 class="title" style="text-align:center;margin-bottom:6px;">EmailJS Config</h2>
+    <p class="hint" style="text-align:center;margin-bottom:10px;">Ikuti langkah di bawah satu per satu — isi kolom yang muncul setelah tiap langkah.</p>
+
+    <div class="step">
+      <div class="step-title">1. Daftar di emailjs.com</div>
+      <div class="step-body">Buat akun gratis di EmailJS pakai email toko Anda. <a href="https://www.emailjs.com" target="_blank">Buka EmailJS →</a></div>
+      <div class="step-img-placeholder">📸 Screenshot: Halaman registrasi EmailJS (emailjs.com/sign-up)</div>
+    </div>
+
+    <div class="step">
+      <div class="step-title">2. Tambah Email Service</div>
+      <div class="step-body">Menu <b>Email Services</b> → Add New Service → pilih Gmail/Outlook → izinkan akses. Salin <b>Service ID</b> yang muncul, tempel di bawah ini.</div>
+      <div class="step-img-placeholder">📸 Screenshot: Halaman Email Services → pilih provider → tampil Service ID</div>
+      <label>Service ID</label>
+      <input type="text" id="gcService" placeholder="service-xxxxxxx" oninput="markStepDone(this)">
+    </div>
+
+    <div class="step">
+      <div class="step-title">3. Buat Template Invoice</div>
+      <div class="step-body">
+        Menu <b>Email Templates</b> → Create New Template → di kolom Content pilih <b>mode HTML</b>, lalu paste kode di bawah ini.<br><br>
+        <b>PENTING:</b> Di panel kanan, isi kolom <b>To Email</b> dengan <code>{{email}}</code> agar email tidak gagal terkirim.
+      </div>
+      <div class="step-img-placeholder">📸 Screenshot: Panel kanan template editor — isi kolom "To Email" dengan {{email}}</div>
+      <label>HTML Template Invoice (paste ke EmailJS → Content → HTML mode)</label>
+      <div class="tmpl-wrap">
+        <pre class="tmpl" id="tmplInvoice">{{html_body}}</pre>
+        <button class="copy-btn" onclick="copyTmpl('tmplInvoice', this)">COPY</button>
+      </div>
+      <label>Template ID (Invoice)</label>
+      <input type="text" id="gcTemplateInvoice" placeholder="template-xxxxxxx" oninput="markStepDone(this)">
+    </div>
+
+    <div class="step">
+      <div class="step-title">4. Buat Template Paid</div>
+      <div class="step-body">
+        Buat template kedua khusus konfirmasi pembayaran. Paste kode HTML di bawah ke kolom Content (mode HTML).<br><br>
+        <b>PENTING:</b> Pastikan juga kolom <b>To Email</b> diisi dengan <code>{{email}}</code>.
+      </div>
+      <div class="step-img-placeholder">📸 Screenshot: Template editor untuk konfirmasi pembayaran</div>
+      <label>HTML Template Paid (paste ke EmailJS → Content → HTML mode)</label>
+      <div class="tmpl-wrap">
+        <pre class="tmpl" id="tmplPaid">{{html_body_paid}}</pre>
+        <button class="copy-btn" onclick="copyTmpl('tmplPaid', this)">COPY</button>
+      </div>
+      <label>Template ID (Paid)</label>
+      <input type="text" id="gcTemplatePaid" placeholder="template-yyyyyyy" oninput="markStepDone(this)">
+    </div>
+
+    <div class="step">
+      <div class="step-title">5. Ambil Public Key</div>
+      <div class="step-body">Menu <b>Account → General</b>, salin Public Key Anda.</div>
+      <div class="step-img-placeholder">📸 Screenshot: Halaman Account → General → Public Key</div>
+      <label>Public Key</label>
+      <input type="text" id="gcPublicKey" placeholder="Public key" oninput="markStepDone(this)">
+    </div>
+
+    <div class="back-row" style="display:flex;gap:10px;">
+      <button class="btn dark" onclick="saveGuidedConfig()">Simpan &amp; Tes Kirim</button>
+      <button class="btn ghost" onclick="goTo('main')">Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: preview detail -->
+<div class="modal-overlay" id="previewModal">
+  <div class="modal-box">
+    <h3 id="previewTitle" style="margin-top:0;"></h3>
+    <div id="previewBody"></div>
+    <button class="btn ghost" style="margin-top:14px;" onclick="closePreview()">Tutup</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const LS = {
+  shop:'im_shop', items:'im_items', emailjs:'im_emailjs', mapping:'im_mapping',
+  orders:'im_orders', seq:'im_invoice_seq', sentlog:'im_sentlog',
+  sheetCache:'im_sheet_cache'
+};
+let currentRows = [], currentHeaders = [];
+
+function loadJSON(key, fallback){ try{ return JSON.parse(localStorage.getItem(key)) ?? fallback; }catch(e){ return fallback; } }
+function saveJSON(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+const CURRENCY_LOCALE = {
+  IDR:{locale:'id-ID', frac:0}, USD:{locale:'en-US', frac:2}, SGD:{locale:'en-SG', frac:2},
+  MYR:{locale:'ms-MY', frac:2}, JPY:{locale:'ja-JP', frac:0}, PHP:{locale:'en-PH', frac:2}
+};
+function getCurrency(){ const s = loadJSON(LS.shop, {}); return s.currency || 'IDR'; }
+function formatMoney(n){
+  const cur = getCurrency();
+  const conf = CURRENCY_LOCALE[cur] || CURRENCY_LOCALE.IDR;
+  return new Intl.NumberFormat(conf.locale,{style:'currency',currency:cur,minimumFractionDigits:conf.frac}).format(Math.round(n||0));
+}
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; setTimeout(()=>t.style.display='none',3000); }
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// ---------- copy button ----------
+function copyTmpl(id, btn){
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const orig = btn.textContent;
+    btn.textContent = 'COPIED!';
+    setTimeout(()=>btn.textContent=orig, 1800);
+  });
+}
+
+// ---------- screen navigation ----------
+function goTo(screen){
+  document.querySelectorAll('[id^="screen-"]').forEach(el=>el.style.display='none');
+  document.getElementById('screen-'+screen).style.display='block';
+  document.getElementById('screenLabel').textContent = screen.replace('-',' ').toUpperCase();
+  if(screen==='item-manager') renderItemManager();
+  if(screen==='sheet-config') fillMappingSelects();
+  if(screen==='guided-config') renderGuidedTemplates();
+}
+function updateClock(){
+  const now = new Date();
+  document.getElementById('liveClock').textContent =
+    now.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}) + '  ' + now.toLocaleTimeString('id-ID');
+}
+setInterval(updateClock, 1000);
+updateClock();
+function loadCurrencyToForm(){
+  document.getElementById('currencySelect').value = getCurrency();
+}
+function changeCurrency(val){
+  const s = loadJSON(LS.shop, {});
+  s.currency = val;
+  saveJSON(LS.shop, s);
+  renderOrders();
+  toast('Mata uang diubah ke '+val);
+}
+
+// ---------- shop details ----------
+function loadShopDetails(){
+  const s = loadJSON(LS.shop, {});
+  document.getElementById('shopName').value = s.shopName || '';
+  document.getElementById('invoicePrefix').value = s.invoicePrefix || 'INV-';
+  document.getElementById('paymentInfo').value = s.paymentInfo || '';
+  // Restore header image preview
+  if(s.headerImage){
+    const preview = document.getElementById('headerImgPreview');
+    preview.src = s.headerImage;
+    preview.style.display = 'block';
+  }
+}
+function handleHeaderImage(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  if(file.size > 1200*1024){ toast('Ukuran gambar terlalu besar (maks 1.2MB)'); evt.target.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = e=>{
+    const s = loadJSON(LS.shop, {});
+    s.headerImage = e.target.result;
+    saveJSON(LS.shop, s);
+    const preview = document.getElementById('headerImgPreview');
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+    toast('Header gambar tersimpan');
+  };
+  reader.readAsDataURL(file);
+}
+function saveShopDetails(){
+  const s = loadJSON(LS.shop, {});
+  s.shopName = document.getElementById('shopName').value.trim();
+  s.invoicePrefix = document.getElementById('invoicePrefix').value.trim() || 'INV-';
+  s.paymentInfo = document.getElementById('paymentInfo').value.trim();
+  saveJSON(LS.shop, s);
+  toast('Shop Details tersimpan');
+}
+
+// ---------- EmailJS config ----------
+function loadEmailjsToForm(){
+  const e = loadJSON(LS.emailjs, {});
+  document.getElementById('ejsService').value = e.serviceId || '';
+  document.getElementById('ejsTemplateInvoice').value = e.templateIdInvoice || '';
+  document.getElementById('ejsTemplatePaid').value = e.templateIdPaid || '';
+  document.getElementById('ejsPublicKey').value = e.publicKey || '';
+  if(e.publicKey){ try{ emailjs.init(e.publicKey); }catch(err){} }
+}
+function saveEmailjsConfig(){
+  const conf = {
+    serviceId: document.getElementById('ejsService').value.trim(),
+    templateIdInvoice: document.getElementById('ejsTemplateInvoice').value.trim(),
+    templateIdPaid: document.getElementById('ejsTemplatePaid').value.trim(),
+    publicKey: document.getElementById('ejsPublicKey').value.trim(),
+  };
+  saveJSON(LS.emailjs, conf);
+  if(conf.publicKey){ try{ emailjs.init(conf.publicKey); }catch(err){} }
+  document.getElementById('ejsStatus').textContent = 'Tersimpan.';
+  toast('EmailJS Config tersimpan');
+}
+function markStepDone(el){ if(el.value.trim()) el.classList.add('field-ok'); else el.classList.remove('field-ok'); }
+function saveGuidedConfig(){
+  document.getElementById('ejsService').value = document.getElementById('gcService').value.trim();
+  document.getElementById('ejsTemplateInvoice').value = document.getElementById('gcTemplateInvoice').value.trim();
+  document.getElementById('ejsTemplatePaid').value = document.getElementById('gcTemplatePaid').value.trim();
+  document.getElementById('ejsPublicKey').value = document.getElementById('gcPublicKey').value.trim();
+  saveEmailjsConfig();
+  sendTestEmail();
+  goTo('main');
+}
+function sendTestEmail(){
+  const e = loadJSON(LS.emailjs, {});
+  if(!e.serviceId || !e.templateIdInvoice || !e.publicKey){
+    document.getElementById('ejsStatus').textContent = 'Lengkapi Service ID, Template ID (Invoice), dan Public Key dulu.';
+    return;
+  }
+  const testEmail = prompt('Kirim email percobaan ke alamat mana?');
+  if(!testEmail) return;
+  const s = loadJSON(LS.shop, {});
+  document.getElementById('ejsStatus').textContent = 'Mengirim...';
+  const testHtml = buildInvoiceHtml({
+    nama:'Pelanggan Test', invoiceNumber:(s.invoicePrefix||'INV-')+'TEST',
+    mailOrder:'true', address:'Jl. Contoh No. 1',
+    lines:[{itemLabel:'Item Contoh', qty:1, harga:10000, subtotal:10000, matched:true, qtyValid:true}],
+    shippingFee: 0, total:10000
+  });
+  emailjs.send(e.serviceId, e.templateIdInvoice, {
+    email:testEmail, to_name:'Pelanggan Test',
+    invoice_number:(s.invoicePrefix||'INV-')+'TEST',
+    invoice_date:new Date().toLocaleDateString('id-ID'),
+    fulfillment:'Contoh Pengiriman',
+    items_text:'- Item Contoh x1 = '+formatMoney(10000),
+    total_formatted:formatMoney(10000),
+    shop_name:s.shopName||'',
+    payment_info:s.paymentInfo||'',
+    html_body: testHtml
+  }).then(()=>{ document.getElementById('ejsStatus').textContent='Berhasil terkirim ke '+testEmail+'.'; })
+    .catch(err=>{ document.getElementById('ejsStatus').textContent='Gagal: '+(err&&err.text?err.text:JSON.stringify(err)); });
+}
+
+// ---------- HTML email template builder ----------
+function buildInvoiceHtml(o){
+  const shop = loadJSON(LS.shop, {});
+  const headerSrc = shop.headerImage || '';
+  const isMailOrder = o.mailOrder && o.mailOrder.toString().toLowerCase()==='true';
+  const fulfillmentText = isMailOrder ? 'Dikirim ke '+o.address : 'Diambil di venue';
+  const rows = o.lines.map(l=>`
+    <tr>
+      <td style="padding:8px 12px;border-bottom:1px solid #e5e5e5;">${escapeHtml(l.itemLabel)}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e5e5e5;text-align:center;">${l.qty}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e5e5e5;text-align:right;">${formatMoney(l.harga)}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e5e5e5;text-align:right;font-weight:700;">${formatMoney(l.subtotal)}</td>
+    </tr>`).join('');
+  const shippingRow = (o.shippingFee && o.shippingFee > 0) ? `
+    <tr>
+      <td colspan="3" style="padding:8px 12px;border-bottom:1px solid #e5e5e5;font-style:italic;">Biaya Pengiriman</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e5e5e5;text-align:right;font-weight:700;">${formatMoney(o.shippingFee)}</td>
+    </tr>` : '';
+  const headerBlock = headerSrc
+    ? `<img src="${headerSrc}" alt="${escapeHtml(shop.shopName||'Header')}" style="width:100%;max-height:160px;object-fit:contain;object-position:center;display:block;">`
+    : `<div style="background:#0F0F0F;padding:24px 32px;"><span style="color:#FFD400;font-size:22px;font-weight:800;font-family:Arial,sans-serif;">${escapeHtml(shop.shopName||'INVOICE')}</span></div>`;
+  return `<!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Invoice ${escapeHtml(o.invoiceNumber)}</title></head>
+<body style="margin:0;padding:0;background:#F2EFE4;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F2EFE4;padding:32px 0;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border:3px solid #0F0F0F;box-shadow:6px 6px 0 #0F0F0F;">
+  <!-- HEADER -->
+  <tr><td style="padding:0;overflow:hidden;">
+    ${headerBlock}
+  </td></tr>
+  <!-- TITLE BAR -->
+  <tr><td style="background:#FF5CA8;padding:12px 24px;border-top:3px solid #0F0F0F;border-bottom:3px solid #0F0F0F;">
+    <span style="font-size:20px;font-weight:800;color:#0F0F0F;font-family:Arial,sans-serif;">INVOICE PESANAN</span>
+  </td></tr>
+  <!-- INFO -->
+  <tr><td style="padding:24px 24px 0;">
+    <p style="margin:0 0 6px;font-size:14px;">Halo <b>${escapeHtml(o.nama)}</b>,</p>
+    <p style="margin:0 0 16px;font-size:13px;color:#555;">Berikut adalah detail pesanan Anda. Terima kasih telah berbelanja!</p>
+    <table cellpadding="0" cellspacing="0" style="font-size:13px;margin-bottom:20px;">
+      <tr><td style="padding:3px 16px 3px 0;color:#888;font-weight:700;white-space:nowrap;">No. Invoice</td><td style="padding:3px 0;font-weight:700;">${escapeHtml(o.invoiceNumber)}</td></tr>
+      <tr><td style="padding:3px 16px 3px 0;color:#888;font-weight:700;white-space:nowrap;">Tanggal</td><td style="padding:3px 0;">${new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})}</td></tr>
+      <tr><td style="padding:3px 16px 3px 0;color:#888;font-weight:700;white-space:nowrap;">Metode</td><td style="padding:3px 0;">${escapeHtml(fulfillmentText)}</td></tr>
+    </table>
+  </td></tr>
+  <!-- ITEMS TABLE -->
+  <tr><td style="padding:0 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;border:2px solid #0F0F0F;">
+      <thead>
+        <tr style="background:#0F0F0F;">
+          <th style="padding:10px 12px;text-align:left;color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Item</th>
+          <th style="padding:10px 12px;text-align:center;color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Qty</th>
+          <th style="padding:10px 12px;text-align:right;color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Harga</th>
+          <th style="padding:10px 12px;text-align:right;color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+        ${shippingRow}
+      </tbody>
+      <tfoot>
+        <tr style="background:#FFD400;">
+          <td colspan="3" style="padding:12px;font-weight:800;font-size:14px;border-top:2px solid #0F0F0F;">TOTAL</td>
+          <td style="padding:12px;text-align:right;font-weight:800;font-size:14px;border-top:2px solid #0F0F0F;">${formatMoney(o.total + (o.shippingFee||0))}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </td></tr>
+  <!-- PAYMENT INFO -->
+  <tr><td style="padding:20px 24px;">
+    <div style="background:#F9F7EE;border:2px solid #0F0F0F;padding:14px 16px;">
+      <p style="margin:0 0 6px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:#888;">Informasi Pembayaran</p>
+      <pre style="margin:0;font-family:Arial,sans-serif;font-size:13px;white-space:pre-wrap;">${escapeHtml(shop.paymentInfo||'—')}</pre>
+    </div>
+  </td></tr>
+  <!-- FOOTER -->
+  <tr><td style="padding:16px 24px;border-top:3px solid #0F0F0F;background:#0F0F0F;text-align:center;">
+    <p style="margin:0;font-size:12px;color:#aaa;">Terima kasih, <b style="color:#FFD400;">${escapeHtml(shop.shopName||'')}</b></p>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+function buildPaidHtml(o){
+  const shop = loadJSON(LS.shop, {});
+  const headerSrc = shop.headerImage || '';
+  const headerBlock = headerSrc
+    ? `<img src="${headerSrc}" alt="${escapeHtml(shop.shopName||'Header')}" style="width:100%;max-height:160px;object-fit:contain;object-position:center;display:block;">`
+    : `<div style="background:#0F0F0F;padding:24px 32px;"><span style="color:#B6FF3B;font-size:22px;font-weight:800;font-family:Arial,sans-serif;">${escapeHtml(shop.shopName||'')}</span></div>`;
+  return `<!DOCTYPE html>
+<html lang="id"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Pembayaran Dikonfirmasi — ${escapeHtml(o.invoiceNumber)}</title></head>
+<body style="margin:0;padding:0;background:#F2EFE4;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F2EFE4;padding:32px 0;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border:3px solid #0F0F0F;box-shadow:6px 6px 0 #0F0F0F;">
+  <!-- HEADER -->
+  <tr><td style="padding:0;overflow:hidden;">
+    ${headerBlock}
+  </td></tr>
+  <!-- TITLE BAR -->
+  <tr><td style="background:#B6FF3B;padding:12px 24px;border-top:3px solid #0F0F0F;border-bottom:3px solid #0F0F0F;">
+    <span style="font-size:20px;font-weight:800;color:#0F0F0F;font-family:Arial,sans-serif;">✓ PEMBAYARAN DIKONFIRMASI</span>
+  </td></tr>
+  <!-- BODY -->
+  <tr><td style="padding:28px 24px;">
+    <p style="margin:0 0 10px;font-size:14px;">Halo <b>${escapeHtml(o.nama)}</b>,</p>
+    <p style="margin:0 0 20px;font-size:13px;color:#555;">Pembayaran Anda telah kami terima dan dikonfirmasi. Berikut ringkasannya:</p>
+    <table cellpadding="0" cellspacing="0" style="font-size:13px;margin-bottom:24px;">
+      <tr><td style="padding:4px 18px 4px 0;color:#888;font-weight:700;">No. Invoice</td><td style="padding:4px 0;font-weight:700;">${escapeHtml(o.invoiceNumber)}</td></tr>
+      <tr><td style="padding:4px 18px 4px 0;color:#888;font-weight:700;">Tanggal Bayar</td><td style="padding:4px 0;">${new Date(o.paidAt).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})}</td></tr>
+      <tr><td style="padding:4px 18px 4px 0;color:#888;font-weight:700;">Total</td><td style="padding:4px 0;font-weight:800;font-size:15px;">${formatMoney(o.total + (o.shippingFee||0))}</td></tr>
+    </table>
+    <div style="background:#B6FF3B;border:2px solid #0F0F0F;padding:14px 18px;font-weight:700;font-size:13px;">
+      Pesanan Anda sedang kami proses. Kami akan segera menghubungi Anda jika ada informasi lebih lanjut.
+    </div>
+  </td></tr>
+  <!-- FOOTER -->
+  <tr><td style="padding:16px 24px;border-top:3px solid #0F0F0F;background:#0F0F0F;text-align:center;">
+    <p style="margin:0;font-size:12px;color:#aaa;">Terima kasih, <b style="color:#B6FF3B;">${escapeHtml(shop.shopName||'')}</b></p>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+function renderGuidedTemplates(){
+  // Build and show sample templates in the guided config
+  const sampleOrder = {
+    nama:'{{to_name}}', invoiceNumber:'{{invoice_number}}',
+    mailOrder:'true', address:'{{address}}',
+    shippingFee:0,
+    lines:[
+      {itemLabel:'Contoh Item A', qty:2, harga:50000, subtotal:100000, matched:true, qtyValid:true},
+      {itemLabel:'Contoh Item B', qty:1, harga:75000, subtotal:75000, matched:true, qtyValid:true}
+    ],
+    total:175000
+  };
+  // For the template we use raw EmailJS variables, not actual values
+  const invoiceHtmlRaw = buildInvoiceHtml(sampleOrder)
+    .replace('{{to_name}}','{{to_name}}')
+    .replace('{{invoice_number}}','{{invoice_number}}');
+  document.getElementById('tmplInvoice').textContent = invoiceHtmlRaw;
+
+  const paidSample = {
+    nama:'{{to_name}}', invoiceNumber:'{{invoice_number}}', paidAt:new Date().toISOString(),
+    shippingFee:0, total:175000
+  };
+  const paidHtmlRaw = buildPaidHtml(paidSample);
+  document.getElementById('tmplPaid').textContent = paidHtmlRaw;
+}
+
+// ---------- item manager (with variations) ----------
+function renderItemManager(){
+  const items = loadJSON(LS.items, []);
+  const wrap = document.getElementById('itemsContainer');
+  wrap.innerHTML = '';
+  items.forEach((it, idx)=>{
+    const block = document.createElement('div');
+    block.className = 'item-block';
+    block.innerHTML = `
+      <div class="item-head">
+        <input type="text" value="${escapeHtml(it.name)}" placeholder="Nama item" onchange="updateItemName(${idx}, this.value)">
+        ${it.variations.length===0 ? `<input type="number" step="1" min="0" class="price" value="${it.price||0}" placeholder="Harga" onchange="updateItemPrice(${idx}, this.value)">` : `<span class="hint" style="margin:0;">Harga per variasi ↓</span>`}
+        <button class="btn small ghost" onclick="addVariation(${idx})">+ Variasi</button>
+        <button class="btn small" style="background:var(--warn);" onclick="deleteItem(${idx})">Hapus</button>
+      </div>
+      ${it.variations.map((v,vidx)=>`
+        <div class="variation-row">
+          <input type="text" value="${escapeHtml(v.name)}" placeholder="Nama variasi (mis. XL)" onchange="updateVariation(${idx},${vidx},'name',this.value)">
+          <input type="number" step="1" min="0" class="price" value="${v.price}" placeholder="Harga" onchange="updateVariation(${idx},${vidx},'price',this.value)">
+          <button class="icon-btn" onclick="deleteVariation(${idx},${vidx})">✕</button>
+        </div>
+      `).join('')}
+    `;
+    wrap.appendChild(block);
+  });
+  document.getElementById('itemManagerSummary').textContent =
+    items.length ? `${items.length} item terdaftar.` : 'Belum ada item.';
+}
+function addItem(){
+  const items = loadJSON(LS.items, []);
+  items.push({name:'', price:0, variations:[]});
+  saveJSON(LS.items, items);
+  renderItemManager();
+}
+function deleteItem(idx){
+  const items = loadJSON(LS.items, []);
+  items.splice(idx,1);
+  saveJSON(LS.items, items);
+  renderItemManager();
+}
+function updateItemName(idx, val){
+  const items = loadJSON(LS.items, []);
+  items[idx].name = val.trim();
+  saveJSON(LS.items, items);
+}
+function updateItemPrice(idx, val){
+  const items = loadJSON(LS.items, []);
+  items[idx].price = Math.round(parseFloat(val))||0;
+  saveJSON(LS.items, items);
+}
+function addVariation(idx){
+  const items = loadJSON(LS.items, []);
+  items[idx].variations.push({name:'', price: items[idx].price||0});
+  saveJSON(LS.items, items);
+  renderItemManager();
+}
+function deleteVariation(idx, vidx){
+  const items = loadJSON(LS.items, []);
+  items[idx].variations.splice(vidx,1);
+  saveJSON(LS.items, items);
+  renderItemManager();
+}
+function updateVariation(idx, vidx, field, val){
+  const items = loadJSON(LS.items, []);
+  items[idx].variations[vidx][field] = field==='price' ? (Math.round(parseFloat(val))||0) : val.trim();
+  saveJSON(LS.items, items);
+}
+function buildPriceMap(){
+  const items = loadJSON(LS.items, []);
+  const map = {};
+  items.forEach(it=>{
+    if(it.variations.length===0){
+      map[it.name.trim().toLowerCase()] = it.price;
+    } else {
+      it.variations.forEach(v=>{
+        map[(it.name.trim()+'|'+v.name.trim()).toLowerCase()] = v.price;
+      });
+    }
+  });
+  return map;
+}
+
+// ---------- spreadsheet upload & mapping ----------
+function handleSheetUpload(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    const data = new Uint8Array(e.target.result);
+    const wb = XLSX.read(data, {type:'array'});
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    currentRows = XLSX.utils.sheet_to_json(sheet, {defval:''});
+    if(currentRows.length===0){ toast('File kosong/tidak dikenali'); return; }
+    currentHeaders = Object.keys(currentRows[0]);
+    // Cache sheet data to localStorage for persistence
+    try {
+      saveJSON(LS.sheetCache, {
+        name: file.name,
+        rows: currentRows,
+        headers: currentHeaders
+      });
+    } catch(err) {
+      // Might exceed localStorage quota for very large files — silently ignore
+    }
+    updateSheetSummary(file.name, currentRows.length);
+    document.getElementById('sheetConfigBtn').disabled = false;
+    goTo('sheet-config');
+  };
+  reader.readAsArrayBuffer(file);
+}
+function updateSheetSummary(name, count){
+  document.getElementById('sheetSummary').textContent = `${name} — ${count} baris terbaca.`;
+}
+function restoreSheetCache(){
+  const cache = loadJSON(LS.sheetCache, null);
+  if(!cache || !cache.rows || cache.rows.length===0) return;
+  currentRows = cache.rows;
+  currentHeaders = cache.headers;
+  updateSheetSummary(cache.name, cache.rows.length);
+  document.getElementById('sheetConfigBtn').disabled = false;
+}
+function itemOptionsFromManager(){
+  const items = loadJSON(LS.items, []);
+  const opts = [];
+  items.forEach(it=>{
+    if(!it.name) return;
+    if(it.variations.length===0){
+      opts.push({key: it.name.trim().toLowerCase(), label: it.name});
+    } else {
+      it.variations.forEach(v=>{
+        if(!v.name) return;
+        opts.push({key: (it.name.trim()+'|'+v.name.trim()).toLowerCase(), label: it.name+' - '+v.name});
+      });
+    }
+  });
+  return opts;
+}
+function fillMappingSelects(){
+  const opts = currentHeaders.map(h=>`<option value="${escapeHtml(h)}">${escapeHtml(h)}</option>`).join('');
+  ['mapNama','mapEmail'].forEach(id=>{ document.getElementById(id).innerHTML = opts; });
+  ['mapMailOrder','mapAddress'].forEach(id=>{
+    document.getElementById(id).innerHTML = '<option value="">— tidak ada —</option>' + opts;
+  });
+  guess('mapNama',['nama','name']); guess('mapEmail',['email']);
+  guess('mapMailOrder',['mail order','kirim','pengambilan']); guess('mapAddress',['alamat','address']);
+  renderItemColumnMapping();
+}
+function guess(id, keywords){
+  const m = currentHeaders.find(h=>keywords.some(k=>h.toLowerCase().includes(k)));
+  if(m) document.getElementById(id).value = m;
+}
+function renderItemColumnMapping(){
+  const used = [document.getElementById('mapNama').value, document.getElementById('mapEmail').value,
+    document.getElementById('mapMailOrder').value, document.getElementById('mapAddress').value].filter(Boolean);
+  const remaining = currentHeaders.filter(h=>!used.includes(h));
+  const itemOpts = itemOptionsFromManager();
+  const optHtml = '<option value="">— Bukan kolom item —</option>' + itemOpts.map(o=>`<option value="${escapeHtml(o.key)}">${escapeHtml(o.label)}</option>`).join('');
+  const body = document.getElementById('itemColumnMappingBody');
+  body.innerHTML = '';
+  if(remaining.length===0){
+    body.innerHTML = '<tr><td colspan="2">Tidak ada kolom tersisa untuk dipetakan.</td></tr>';
+    return;
+  }
+  if(itemOpts.length===0){
+    body.innerHTML = '<tr><td colspan="2">Item Manager masih kosong — tambah item dulu supaya bisa dipetakan.</td></tr>';
+    return;
+  }
+  remaining.forEach(h=>{
+    const guessOpt = itemOpts.find(o=> h.toLowerCase().includes(o.label.toLowerCase()) || o.label.toLowerCase().includes(h.toLowerCase()));
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${escapeHtml(h)}</td><td><select data-col="${escapeHtml(h)}" class="itemColSelect">${optHtml}</select></td>`;
+    body.appendChild(tr);
+    if(guessOpt) tr.querySelector('select').value = guessOpt.key;
+  });
+}
+
+// ---------- process orders ----------
+function processOrders(){
+  const colNama=document.getElementById('mapNama').value, colEmail=document.getElementById('mapEmail').value,
+        colMailOrder=document.getElementById('mapMailOrder').value, colAddress=document.getElementById('mapAddress').value;
+  const colMap = {}; // header -> itemKey
+  document.querySelectorAll('.itemColSelect').forEach(sel=>{
+    if(sel.value) colMap[sel.dataset.col] = sel.value;
+  });
+  saveJSON(LS.mapping, {colNama,colEmail,colMailOrder,colAddress,colMap});
+
+  const items = loadJSON(LS.items, []);
+  const priceMap = {}, labelMap = {};
+  items.forEach(it=>{
+    if(it.variations.length===0){
+      priceMap[it.name.trim().toLowerCase()] = it.price; labelMap[it.name.trim().toLowerCase()] = it.name;
+    } else {
+      it.variations.forEach(v=>{
+        const k=(it.name.trim()+'|'+v.name.trim()).toLowerCase();
+        priceMap[k]=v.price; labelMap[k]=it.name+' - '+v.name;
+      });
+    }
+  });
+
+  const shop = loadJSON(LS.shop, {});
+  let seq = loadJSON(LS.seq, 1);
+  const sentlog = loadJSON(LS.sentlog, {});
+  let skippedNoItems = 0;
+
+  const orders = [];
+  currentRows.forEach(row=>{
+    const nama = String(row[colNama]||'').trim();
+    const email = String(row[colEmail]||'').trim();
+    if(!nama || !email) return;
+    const mailOrder = colMailOrder ? String(row[colMailOrder]||'').trim() : '';
+    const address = colAddress ? String(row[colAddress]||'').trim() : '';
+
+    const lines = [];
+    Object.entries(colMap).forEach(([header, itemKey])=>{
+      const raw = row[header];
+      if(raw===''||raw===undefined||raw===null) return;
+      const num = parseFloat(raw);
+      if(isNaN(num) || num===0) return;
+      const qtyValid = Number.isInteger(num) && num>0;
+      const matched = priceMap.hasOwnProperty(itemKey);
+      const harga = matched ? priceMap[itemKey] : 0;
+      const qty = num;
+      lines.push({
+        itemLabel: labelMap[itemKey] || itemKey,
+        qty, qtyValid, harga, matched,
+        subtotal: matched ? harga*(qtyValid?qty:0) : 0
+      });
+    });
+    if(lines.length===0){ skippedNoItems++; return; }
+
+    const hasInvalid = lines.some(l=>!l.qtyValid || !l.matched);
+    const total = lines.reduce((s,l)=>s+l.subtotal,0);
+    const hash = nama.toLowerCase()+'|'+email.toLowerCase()+'|'+total;
+    const already = sentlog[hash];
+    const invoiceNumber = already ? already.invoiceNumber : (shop.invoicePrefix||'INV-')+new Date().getFullYear()+'-'+String(seq++).padStart(4,'0');
+    orders.push({
+      nama, email, mailOrder, address, lines, total, hash, invoiceNumber,
+      shippingFee: 0,
+      status: already ? 'SENT' : (hasInvalid ? 'NEEDS REVIEW' : 'WAITING'),
+      paid:false, paidAt:null, paidEmailStatus:'—'
+    });
+  });
+  saveJSON(LS.seq, seq);
+  saveJSON(LS.orders, orders);
+  if(skippedNoItems>0) toast(skippedNoItems+' baris dilewati (tidak ada item dipesan)');
+  goTo('main');
+  renderOrders();
+}
+
+// ---------- shipping fee ----------
+function updateShippingFee(idx, val){
+  const orders = loadJSON(LS.orders, []);
+  orders[idx].shippingFee = Math.round(parseFloat(val))||0;
+  saveJSON(LS.orders, orders);
+}
+
+// ---------- render orders table ----------
+function renderOrders(){
+  const orders = loadJSON(LS.orders, []);
+  const body = document.getElementById('orderTableBody');
+  body.innerHTML = '';
+  if(orders.length===0){
+    body.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:22px;font-weight:600;">Belum ada order — upload spreadsheet dulu di Spreadsheets Config.</td></tr>';
+    document.getElementById('sendAllBtn').disabled = true;
+    return;
+  }
+  document.getElementById('sendAllBtn').disabled = !orders.some(o=>o.status==='WAITING'||o.status==='FAILED');
+  orders.forEach((o, idx)=>{
+    const statusClass = o.status==='SENT'?'ok':(o.status==='WAITING'?'wait':'warn');
+    const paidStatusClass = o.paid ? 'ok' : 'wait';
+    const paidEmailClass = o.paidEmailStatus==='SENT'?'ok':(o.paidEmailStatus==='FAILED'?'warn':'wait');
+    const isMailOrder = o.mailOrder && o.mailOrder.toString().toLowerCase()==='true';
+    const shippingCell = isMailOrder
+      ? `<div class="shipping-fee-row">
+           <span style="font-size:10px;font-weight:700;white-space:nowrap;">+ Ongkir</span>
+           <input type="number" min="0" step="1" value="${o.shippingFee||0}" placeholder="0"
+             onchange="updateShippingFee(${idx},this.value)">
+         </div>`
+      : `<span style="font-size:11px;color:#aaa;">—</span>`;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${idx+1}</td>
+      <td>${escapeHtml(o.nama)}<div class="hint" style="margin:0;">${o.invoiceNumber}</div></td>
+      <td><a href="mailto:${o.email}">${escapeHtml(o.email)}</a></td>
+      <td>${escapeHtml(o.mailOrder)}</td>
+      <td>${escapeHtml(o.address)}</td>
+      <td>${shippingCell}</td>
+      <td class="num">${formatMoney((o.total||0)+(o.shippingFee||0))}</td>
+      <td><button class="icon-btn" onclick="previewOrder(${idx})">👁</button></td>
+      <td><button class="icon-btn" ${o.status==='SENT'?'disabled':''} onclick="sendInvoice(${idx})">➤</button></td>
+      <td><span class="status-pill ${statusClass}">${o.status}</span></td>
+      <td>
+        <span class="status-pill ${paidStatusClass}" style="cursor:pointer;" onclick="togglePaid(${idx})">${o.paid?'PAID':'UNPAID'}</span>
+      </td>
+      <td>
+        ${o.paid ? `<button class="icon-btn" ${o.paidEmailStatus==='SENT'?'disabled':''} onclick="sendPaidEmail(${idx})">➤</button> <span class="status-pill ${paidEmailClass}">${o.paidEmailStatus}</span>` : '—'}
+      </td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+function previewOrder(idx){
+  const orders = loadJSON(LS.orders, []);
+  const o = orders[idx];
+  const shop = loadJSON(LS.shop, {});
+  const fulfillmentText = o.mailOrder && o.mailOrder.toString().toLowerCase()==='true' ? 'Dikirim ke '+o.address : 'Diambil di venue';
+  document.getElementById('previewTitle').textContent = o.invoiceNumber+' — '+o.nama;
+  document.getElementById('previewBody').innerHTML = `
+    <table>
+      <thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Harga</th><th class="num">Subtotal</th></tr></thead>
+      <tbody>
+        ${o.lines.map(l=>`<tr>
+          <td>${escapeHtml(l.itemLabel)} ${!l.matched?'<div class="hint" style="margin:0;color:var(--warn);">item tidak ditemukan di Item Manager</div>':''} ${!l.qtyValid?'<div class="hint" style="margin:0;color:var(--warn);">jumlah tidak valid</div>':''}</td>
+          <td class="num">${l.qty}</td><td class="num">${formatMoney(l.harga)}</td><td class="num">${formatMoney(l.subtotal)}</td>
+        </tr>`).join('')}
+        ${(o.shippingFee && o.shippingFee>0) ? `<tr><td colspan="3" style="font-style:italic;">Biaya Pengiriman</td><td class="num">${formatMoney(o.shippingFee)}</td></tr>` : ''}
+      </tbody>
+    </table>
+    <p style="text-align:right;font-weight:800;margin-top:10px;">TOTAL: ${formatMoney((o.total||0)+(o.shippingFee||0))}</p>
+    <p><b>Metode:</b> ${escapeHtml(fulfillmentText)}</p>
+    <h2 class="section" style="margin-top:16px;">Preview Email (HTML)</h2>
+    <p class="hint">Ini adalah preview tampilan email yang akan dikirim ke pelanggan.</p>
+    <iframe srcdoc="${escapeHtml(buildInvoiceHtml(o))}" style="width:100%;height:340px;border:2px solid var(--ink);border-radius:0;" sandbox="allow-same-origin"></iframe>
+  `;
+  document.getElementById('previewModal').classList.add('active');
+}
+function closePreview(){ document.getElementById('previewModal').classList.remove('active'); }
+
+function sendInvoice(idx){
+  const orders = loadJSON(LS.orders, []);
+  const o = orders[idx];
+  const e = loadJSON(LS.emailjs, {});
+  const shop = loadJSON(LS.shop, {});
+  if(!e.serviceId || !e.templateIdInvoice || !e.publicKey){ toast('Lengkapi dulu EmailJS Config'); return; }
+  const isMailOrder = o.mailOrder && o.mailOrder.toString().toLowerCase()==='true';
+  const fulfillmentText = isMailOrder ? 'Dikirim ke '+o.address : 'Diambil di venue';
+  const itemsText = o.lines.map(l=>`- ${l.itemLabel} x${l.qty} = ${formatMoney(l.subtotal)}`).join('\n');
+  const htmlBody = buildInvoiceHtml(o);
+  emailjs.send(e.serviceId, e.templateIdInvoice, {
+    email:o.email, to_name:o.nama, invoice_number:o.invoiceNumber,
+    invoice_date:new Date().toLocaleDateString('id-ID'),
+    fulfillment: fulfillmentText,
+    items_text:itemsText,
+    total_formatted:formatMoney((o.total||0)+(o.shippingFee||0)),
+    shop_name:shop.shopName||'',
+    payment_info:shop.paymentInfo||'',
+    html_body: htmlBody
+  }).then(()=>{
+    o.status='SENT';
+    const sentlog = loadJSON(LS.sentlog, {});
+    sentlog[o.hash] = {invoiceNumber:o.invoiceNumber, sentAt:new Date().toISOString()};
+    saveJSON(LS.sentlog, sentlog);
+    saveJSON(LS.orders, orders);
+    renderOrders();
+    toast('Terkirim ke '+o.email);
+  }).catch(err=>{
+    o.status='FAILED';
+    saveJSON(LS.orders, orders);
+    renderOrders();
+    toast('Gagal kirim: '+(err&&err.text?err.text:'cek konsol'));
+  });
+}
+function sendAllPending(){
+  const orders = loadJSON(LS.orders, []);
+  orders.forEach((o, idx)=>{ if(o.status==='WAITING'||o.status==='FAILED') setTimeout(()=>sendInvoice(idx), idx*1200); });
+}
+
+function togglePaid(idx){
+  const orders = loadJSON(LS.orders, []);
+  const o = orders[idx];
+  o.paid = !o.paid;
+  o.paidAt = o.paid ? new Date().toISOString() : null;
+  if(!o.paid) o.paidEmailStatus = '—';
+  else if(o.paidEmailStatus==='—') o.paidEmailStatus='WAITING';
+  saveJSON(LS.orders, orders);
+  renderOrders();
+}
+function sendPaidEmail(idx){
+  const orders = loadJSON(LS.orders, []);
+  const o = orders[idx];
+  const e = loadJSON(LS.emailjs, {});
+  const shop = loadJSON(LS.shop, {});
+  if(!e.serviceId || !e.templateIdPaid || !e.publicKey){ toast('Lengkapi dulu Template ID (Paid) di EmailJS Config'); return; }
+  const htmlBodyPaid = buildPaidHtml(o);
+  emailjs.send(e.serviceId, e.templateIdPaid, {
+    email:o.email, to_name:o.nama, invoice_number:o.invoiceNumber,
+    paid_date:new Date(o.paidAt).toLocaleDateString('id-ID'),
+    total_formatted:formatMoney((o.total||0)+(o.shippingFee||0)),
+    shop_name:shop.shopName||'',
+    html_body_paid: htmlBodyPaid
+  }).then(()=>{
+    o.paidEmailStatus='SENT';
+    saveJSON(LS.orders, orders);
+    renderOrders();
+    toast('Email PAID terkirim ke '+o.email);
+  }).catch(err=>{
+    o.paidEmailStatus='FAILED';
+    saveJSON(LS.orders, orders);
+    renderOrders();
+    toast('Gagal kirim email PAID');
+  });
+}
+
+// ---------- init ----------
+loadShopDetails();
+loadCurrencyToForm();
+loadEmailjsToForm();
+restoreSheetCache();
+renderOrders();
+</script>
+</body>
+</html>

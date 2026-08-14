@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invoice Maker - Spreadsheet Config | KIRAKIRAAZK</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="frame">
+  
+  <!-- NAVIGATION -->
+  <nav class="nav-bar" id="mainNav" data-page="sheet"></nav>
+
+  <div class="card" id="screen-sheet-config">
+    <h2 class="title" style="text-align:center;margin-bottom:20px;" data-i18n="sheet_config_title">SPREADSHEET CONFIG</h2>
+    <p class="hint" data-i18n="sheet_hint">Step 1: Map customer data columns. Step 2: Map remaining columns to registered items.</p>
+    
+    <!-- No sheet warning -->
+    <div id="noSheetWarning" style="display:none; text-align:center; padding: 30px; background: #fffbe6; border: 3px dashed var(--ink);">
+        <div style="font-size:32px;margin-bottom:8px;">📄</div>
+        <p style="font-weight:bold; color:var(--warn);" data-i18n="no_sheet_warning">No spreadsheet uploaded yet.</p>
+        <p data-i18n="no_sheet_hint">Go to Dashboard and upload an .xlsx file first.</p>
+        <a href="index.html"><button class="btn dark" style="margin-top:10px;" data-i18n="go_to_dashboard">Go to Dashboard</button></a>
+    </div>
+
+    <div id="sheetConfigContainer" style="display:none;">
+      <!-- Data Preview -->
+      <div id="dataPreviewSection">
+        <h2 class="section" data-i18n="data_preview">Data Preview</h2>
+        <p class="hint" id="dataPreviewHint"></p>
+        <div class="data-preview-wrap" id="dataPreviewWrap"></div>
+      </div>
+
+      <div class="grid3" style="grid-template-columns:1fr 1fr;">
+        <div><label data-i18n="name_column">Name Column *</label><select id="mapNama" onchange="renderItemColumnMapping()"></select></div>
+        <div><label data-i18n="email_column">Email Column *</label><select id="mapEmail" onchange="renderItemColumnMapping()"></select></div>
+        <div><label data-i18n="mail_order_column">Mail Order / Delivery Column (Optional)</label><select id="mapMailOrder" onchange="renderItemColumnMapping()"><option value="">— None —</option></select></div>
+        <div><label data-i18n="address_column">Address Column (Optional)</label><select id="mapAddress" onchange="renderItemColumnMapping()"><option value="">— None —</option></select></div>
+      </div>
+      
+      <h2 class="section" style="margin-top:26px;" data-i18n="item_mapping">Item Mapping</h2>
+      <p class="hint" data-i18n="item_mapping_hint">The remaining columns are shown below. Map them to the correct items in your Item Manager.</p>
+      
+      <div class="table-wrap" style="margin-top:10px;">
+        <table>
+          <thead><tr><th data-i18n="spreadsheet_column">Spreadsheet Column</th><th data-i18n="mapped_to">Mapped To Item</th></tr></thead>
+          <tbody id="itemColumnMappingBody"></tbody>
+        </table>
+      </div>
+      
+      <div class="back-row" style="display:flex;gap:10px;">
+        <button class="btn dark" onclick="processOrders()" data-i18n="process_invoices">Process Invoices</button>
+        <a href="index.html"><button class="btn ghost" data-i18n="back_to_dashboard">Back to Dashboard</button></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/i18n.js"></script>
+<script src="js/app.js"></script>
+<script src="js/sheet-config.js"></script>
+</body>
+</html>

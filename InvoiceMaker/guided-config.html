@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invoice Maker - EmailJS Config | KIRAKIRAAZK</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="frame">
+  
+  <!-- NAVIGATION -->
+  <nav class="nav-bar" id="mainNav" data-page="emailjs"></nav>
+
+  <div class="card" id="screen-guided-config">
+    <h2 class="title" style="text-align:center;margin-bottom:6px;" data-i18n="emailjs_config_title">EmailJS Config</h2>
+    <p class="hint" style="text-align:center;margin-bottom:10px;" data-i18n="emailjs_hint">Follow the steps below one by one — fill in the fields that appear after each step.</p>
+
+    <div class="step">
+      <div class="step-title" data-i18n="step1_title">1. Register at emailjs.com</div>
+      <div class="step-body"><span data-i18n="step1_body">Create a free account on EmailJS using your shop's email.</span> <a href="https://www.emailjs.com" target="_blank" data-i18n="step1_link">Open EmailJS →</a></div>
+      <div class="step-img-placeholder" data-i18n="step1_img">📸 Screenshot: EmailJS registration page</div>
+    </div>
+
+    <div class="step">
+      <div class="step-title" data-i18n="step2_title">2. Add Email Service</div>
+      <div class="step-body" data-i18n-html="step2_body">Go to <b>Email Services</b> → Add New Service → choose Gmail/Outlook → grant access. Copy the <b>Service ID</b> and paste it below.</div>
+      <div class="step-img-placeholder" data-i18n="step2_img">📸 Screenshot: Email Services → provider selection → Service ID</div>
+      <label data-i18n="service_id">Service ID</label>
+      <input type="text" id="gcService" placeholder="service-xxxxxxx" oninput="markStepDone(this)">
+    </div>
+
+    <div class="step">
+      <div class="step-title" data-i18n="step3_title">3. Create Invoice Template</div>
+      <div class="step-body">
+        <span data-i18n-html="step3_body">Menu <b>Email Templates</b> → Create New Template → in the Content box, click <b>Source Code / HTML mode <code>&lt;/&gt;</code></b>, then paste the code below.</span><br><br>
+        <span data-i18n-html="step3_important"><b>IMPORTANT:</b> On the right panel, fill the <b>To Email</b> field with <code>{{email}}</code> so the email reaches the customer.</span>
+      </div>
+      <div class="step-img-placeholder" data-i18n="step3_img">📸 Screenshot: Template editor right panel — fill "To Email" with {{email}}</div>
+      <label data-i18n="template_invoice_label">HTML Template Invoice (copy into EmailJS HTML mode)</label>
+      <div class="tmpl-wrap">
+        <pre class="tmpl" id="tmplInvoice"></pre>
+        <button class="copy-btn" onclick="copyTmpl('tmplInvoice', this)" data-i18n="copy">COPY</button>
+      </div>
+      <label data-i18n="template_id_invoice">Template ID (Invoice)</label>
+      <input type="text" id="gcTemplateInvoice" placeholder="template-xxxxxxx" oninput="markStepDone(this)">
+    </div>
+
+    <div class="step">
+      <div class="step-title" data-i18n="step4_title">4. Create Paid Template</div>
+      <div class="step-body">
+        <span data-i18n-html="step4_body">Create a second template for payment confirmation. Paste the HTML below into the Content (HTML mode).</span><br><br>
+        <span data-i18n-html="step4_important"><b>IMPORTANT:</b> Make sure <b>To Email</b> is also set to <code>{{email}}</code>.</span>
+      </div>
+      <div class="step-img-placeholder" data-i18n="step4_img">📸 Screenshot: Paid confirmation template editor</div>
+      <label data-i18n="template_paid_label">HTML Template Paid (copy into EmailJS HTML mode)</label>
+      <div class="tmpl-wrap">
+        <pre class="tmpl" id="tmplPaid"></pre>
+        <button class="copy-btn" onclick="copyTmpl('tmplPaid', this)" data-i18n="copy">COPY</button>
+      </div>
+      <label data-i18n="template_id_paid">Template ID (Paid)</label>
+      <input type="text" id="gcTemplatePaid" placeholder="template-yyyyyyy" oninput="markStepDone(this)">
+    </div>
+
+    <div class="step">
+      <div class="step-title" data-i18n="step5_title">5. Get Public Key</div>
+      <div class="step-body" data-i18n-html="step5_body">Go to <b>Account → General</b>, and copy your Public Key.</div>
+      <div class="step-img-placeholder" data-i18n="step5_img">📸 Screenshot: Account → General → Public Key</div>
+      <label data-i18n="public_key">Public Key</label>
+      <input type="text" id="gcPublicKey" placeholder="Public key" oninput="markStepDone(this)">
+    </div>
+
+    <div class="back-row" style="display:flex;gap:10px;">
+      <button class="btn dark" onclick="saveGuidedConfig()" data-i18n="save_go_dashboard">Save & Go to Dashboard</button>
+      <a href="index.html"><button class="btn ghost" data-i18n="cancel">Cancel</button></a>
+    </div>
+  </div>
+</div>
+
+<script src="js/i18n.js"></script>
+<script src="js/app.js"></script>
+<script src="js/email-templates.js"></script>
+<script src="js/guided-config.js"></script>
+</body>
+</html>

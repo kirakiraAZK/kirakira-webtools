@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invoice Maker - Item Manager | KIRAKIRAAZK</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="frame">
+  
+  <!-- NAVIGATION -->
+  <nav class="nav-bar" id="mainNav" data-page="items"></nav>
+
+  <div class="card" id="screen-item-manager">
+    <h2 class="title" style="text-align:center;margin-bottom:20px;" data-i18n="item_manager_title">ITEM MANAGER</h2>
+
+    <!-- Sticky toolbar: Add Item + count -->
+    <div class="item-toolbar">
+      <span class="item-count" id="itemManagerSummary"></span>
+      <div style="display:flex;gap:8px;">
+        <button class="btn dark" onclick="addItem()" data-i18n="add_item">+ Add Item</button>
+        <a href="index.html"><button class="btn ghost" data-i18n="back_to_dashboard">Back to Dashboard</button></a>
+      </div>
+    </div>
+
+    <div id="itemsContainer"></div>
+  </div>
+</div>
+
+<script src="js/i18n.js"></script>
+<script src="js/app.js"></script>
+<script src="js/items.js"></script>
+</body>
+</html>

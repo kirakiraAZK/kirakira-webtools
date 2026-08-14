@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invoice Maker - Dashboard | KIRAKIRAAZK</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+<body>
+<div class="frame">
+  
+  <!-- NAVIGATION -->
+  <nav class="nav-bar" id="mainNav" data-page="dashboard"></nav>
+
+  <!-- STATUS BAR -->
+  <div class="status-bar" id="statusBar"></div>
+
+  <div class="card" id="screen-main">
+    <div class="topbar">
+      <div class="brand"><span class="kira">KIRAKIRAAZK</span><span class="webtools">WEBTOOLS</span></div>
+      <div class="title">INVOICE MAKER</div>
+      <div class="datetime">
+        <div id="liveClock"></div>
+      </div>
+    </div>
+
+    <!-- 2-COLUMN GRID: Shop Details + Workflow -->
+    <div class="dash-grid">
+      
+      <!-- LEFT: Shop Details -->
+      <div>
+        <h2 class="section" data-i18n="shop_details">Shop Details</h2><span id="shopDirtyWarning" style="display:none; font-size:10.5px; font-weight:700; font-family:'JetBrains Mono',monospace; color:var(--warn); margin-left:10px; vertical-align:middle;">⚠ unsaved changes</span>
+        <label><span data-i18n="shop_header_label">Custom Header (Image URL)</span> <span style="text-transform:none;font-size:9px;color:var(--warn);" data-i18n="shop_header_min">(Min 800×200px)</span></label>
+        <p class="hint" style="margin-top:0;margin-bottom:6px;" data-i18n="shop_header_hint">Paste direct link from Imgur, Discord, etc.</p>
+        <input type="text" id="shopHeaderImg" placeholder="https://i.imgur.com/your-logo.png" oninput="updateHeaderPreview(this.value); markShopDirty();">
+        <img id="headerImgPreview" class="header-img-preview" alt="Header preview" style="width:100%;height:60px;object-fit:cover;margin-top:8px;border:2px solid var(--ink);display:none;">
+        <label data-i18n="shop_name">Shop Name</label>
+        <input type="text" id="shopName" placeholder="My Shop" oninput="markShopDirty()">
+        <label data-i18n="shop_prefix">Invoice Prefix</label>
+        <input type="text" id="invoicePrefix" placeholder="INV-TOKO-" oninput="markShopDirty()">
+        <label data-i18n="shop_payment">Payment Info</label>
+        <textarea id="paymentInfo" rows="3" placeholder="Bank Transfer 1234567890 ..." oninput="markShopDirty()"></textarea>
+        <button id="btnSaveShop" class="btn dark" style="margin-top:10px;" onclick="saveShopDetails()" data-i18n="shop_save">Save Details</button>
+      </div>
+
+      <!-- RIGHT: Workflow -->
+      <div>
+        <h2 class="section" data-i18n="workflow_title">Workflow</h2>
+
+        <!-- Upload Zone -->
+        <label data-i18n="upload_spreadsheet">Upload Spreadsheet</label>
+        <div class="upload-zone" id="uploadZone">
+          <div class="upload-zone-icon">📄</div>
+          <div class="upload-zone-text" data-i18n="upload_hint">Upload .xlsx file to process orders</div>
+          <div class="upload-zone-hint" id="sheetSummary" data-i18n="no_file">No file uploaded yet.</div>
+          <input type="file" id="sheetUpload" accept=".xlsx,.xls" onchange="handleSheetUpload(event)">
+        </div>
+
+        <!-- Manage Items shortcut -->
+        <a href="items.html"><button class="btn" style="background:var(--yellow); color:var(--ink); font-size: 14px; padding: 10px 16px; border-width: 3px; box-shadow: 4px 4px 0 var(--ink); margin-top:14px;" data-i18n="manage_items">Manage Items</button></a>
+
+        <!-- EmailJS Status -->
+        <h2 class="section" style="margin-top:20px;" data-i18n="emailjs_check">EmailJS Status</h2>
+        <p class="hint" id="ejsStatusDisplay" style="margin-top:6px; font-size: 13px;">Checking...</p>
+        <button class="btn ghost" style="padding: 10px 20px; border-width: 2.5px;" onclick="sendTestEmail()" data-i18n="test_email">Test Email</button>
+        
+        <!-- Reset Button -->
+        <div style="margin-top: 50px; padding-top: 14px; text-align: left;">
+          <button class="btn ghost" style="color:var(--warn); border-color:var(--warn);" onclick="resetAllData()" data-i18n="reset_all">Reset All Data</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDERS SECTION -->
+    <div class="section-header">
+      <h2 class="section" data-i18n="orders_title">Orders</h2>
+      <span class="section-count" id="orderCount">0</span>
+    </div>
+
+    <div id="orderTableWrap" class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-i18n="col_no">#</th>
+            <th data-i18n="col_name">Name</th>
+            <th data-i18n="col_email">Email</th>
+            <th data-i18n="col_mail_order">Mail Order</th>
+            <th data-i18n="col_address">Address</th>
+            <th data-i18n="col_shipping">Shipping</th>
+            <th data-i18n="col_total">Grand Total</th>
+            <th data-i18n="col_detail">Detail</th>
+            <th data-i18n="col_invoice">Invoice</th>
+            <th data-i18n="col_status">Status</th>
+            <th data-i18n="col_payment">Payment</th>
+            <th data-i18n="col_paid_email">Paid Email</th>
+          </tr>
+        </thead>
+        <tbody id="orderTableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="send-all-row" id="sendAllRow">
+      <button class="btn sentall" id="sendAllBtn" onclick="sendAllPending()" data-i18n="send_all">SEND ALL ➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: preview detail -->
+<div class="modal-overlay" id="previewModal">
+  <div class="modal-box">
+    <h3 id="previewTitle" style="margin-top:0;"></h3>
+    <div id="previewBody"></div>
+    <button class="btn ghost" style="margin-top:14px;" onclick="closePreview()" data-i18n="close">Close</button>
+  </div>
+</div>
+
+<script src="js/i18n.js"></script>
+<script src="js/app.js"></script>
+<script src="js/email-templates.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
