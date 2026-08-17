@@ -16,6 +16,71 @@ function loadShopDetails(){
       btn.classList.add('ghost');
     }
   }
+
+  currentQrisList = s.qrisList || [];
+  renderQrisList();
+}
+
+let currentQrisList = [];
+let isShopDirty = false;
+
+window.addEventListener('beforeunload', (e) => {
+  if (isShopDirty) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+function renderQrisList() {
+  const container = document.getElementById('qrisListContainer');
+  if(!container) return;
+  container.innerHTML = '';
+  currentQrisList.forEach((q, idx) => {
+    const div = document.createElement('div');
+    div.className = 'qris-item';
+    div.innerHTML = `
+      <div class="qris-item-top">
+        <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
+          <input type="text" placeholder="${t('shop_qris_label_placeholder')}" value="${escapeHtml(q.label || '')}" oninput="updateQrisLabel(${idx}, this.value); markShopDirty();">
+          <input type="text" placeholder="${t('shop_qris_url_placeholder')}" value="${escapeHtml(q.url || '')}" oninput="updateQrisUrl(${idx}, this.value); markShopDirty();">
+        </div>
+        <button class="qris-remove-btn" onclick="removeQrisItem(${idx})">✕</button>
+      </div>
+      <img src="${escapeHtml(q.url || '')}" class="qris-item-img" id="qrisImgPreview_${idx}" alt="QRIS" onerror="this.style.display='none'" onload="this.style.display='block'">
+    `;
+    container.appendChild(div);
+    if (!q.url) div.querySelector('img').style.display = 'none';
+  });
+}
+
+function addQrisItem() {
+  currentQrisList.push({ label: '', url: '' });
+  renderQrisList();
+  markShopDirty();
+}
+
+function removeQrisItem(idx) {
+  currentQrisList.splice(idx, 1);
+  renderQrisList();
+  markShopDirty();
+}
+
+function updateQrisLabel(idx, val) {
+  currentQrisList[idx].label = val;
+}
+
+function updateQrisUrl(idx, val) {
+  currentQrisList[idx].url = val;
+  const img = document.getElementById('qrisImgPreview_'+idx);
+  if (img) {
+    if (val.trim()) {
+      img.src = val.trim();
+      img.style.display = 'block';
+    } else {
+      img.style.display = 'none';
+      img.src = '';
+    }
+  }
 }
 
 function updateHeaderPreview(url){
@@ -34,10 +99,15 @@ function saveShopDetails(){
   s.invoicePrefix = document.getElementById('invoicePrefix').value.trim() || 'INV-';
   s.paymentInfo = document.getElementById('paymentInfo').value.trim();
   s.headerImage = document.getElementById('shopHeaderImg').value.trim();
+  s.qrisList = currentQrisList.map(q => ({ label: q.label.trim(), url: q.url.trim() })).filter(q => q.label || q.url);
+  currentQrisList = s.qrisList; // refresh with cleaned data
+  renderQrisList();
   saveJSON(LS.shop, s);
   toast(t('shop_saved'));
   renderNav();
   renderStatusBar();
+
+  isShopDirty = false;
 
   const btn = document.getElementById('btnSaveShop');
   if (btn) {
@@ -51,6 +121,7 @@ function saveShopDetails(){
 }
 
 function markShopDirty() {
+  isShopDirty = true;
   const btn = document.getElementById('btnSaveShop');
   if (btn) {
     btn.textContent = t('shop_save');
@@ -104,7 +175,7 @@ function sendTestEmail(){
     items_html: generateItemsHtml(testOrder),
     total_formatted: formatMoney(10000),
     shop_name: s.shopName||'',
-    payment_info: s.paymentInfo||'',
+    payment_info: generatePaymentInfoHtml(s),
     header_html: generateHeaderHtml(s)
   }).then(()=>{ toast('Test email sent to '+testEmail); })
     .catch(err=>{ toast('Failed: '+(err&&err.text?err.text:JSON.stringify(err))); });
@@ -325,7 +396,7 @@ function sendInvoice(idx){
     items_html: generateItemsHtml(o),
     total_formatted: formatMoney((o.total||0)+(o.shippingFee||0)),
     shop_name: shop.shopName||'',
-    payment_info: shop.paymentInfo||'',
+    payment_info: generatePaymentInfoHtml(shop),
     header_html: generateHeaderHtml(shop)
   }).then(()=>{
     const freshOrders = loadJSON(LS.orders, []);

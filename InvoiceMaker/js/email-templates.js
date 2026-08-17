@@ -51,7 +51,7 @@ function getInvoiceEmailJSTemplate() {
   <tr><td style="padding:20px 24px;">
     <div style="background:#F9F7EE;border:2px solid #0F0F0F;padding:14px 16px;">
       <p style="margin:0 0 6px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:#888;">Informasi Pembayaran</p>
-      <pre style="margin:0;font-family:Arial,sans-serif;font-size:13px;white-space:pre-wrap;">{{{payment_info}}}</pre>
+      <div>{{{payment_info}}}</div>
     </div>
   </td></tr>
   <!-- FOOTER -->
@@ -129,6 +129,33 @@ function generateItemsHtml(o) {
   return rows + shippingRow;
 }
 
+function generatePaymentInfoHtml(shop) {
+  let html = '';
+  const textInfo = (shop.paymentInfo || '').trim();
+  if (textInfo) {
+    const safeText = escapeHtml(textInfo).replace(/\n/g, '<br>');
+    html += `<div style="font-family:Arial,sans-serif;font-size:13px;line-height:1.5;">${safeText}</div>`;
+  }
+
+  const qrisList = shop.qrisList || [];
+  if (qrisList.length > 0) {
+    html += `<div style="text-align:center; margin-top:16px;">`;
+    qrisList.forEach(q => {
+      if (!q.url) return;
+      html += `<div style="margin-bottom:16px;">`;
+      if (q.label) {
+        html += `<div style="font-size:12px; font-weight:800; margin-bottom:6px; color:#333;">${escapeHtml(q.label)}</div>`;
+      }
+      html += `<img src="${escapeHtml(q.url)}" alt="QRIS" width="200" style="width:200px; max-width:100%; height:auto; border:2px solid #0F0F0F; display:inline-block;" />`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+  }
+  
+  if (!html) return `—`;
+  return html;
+}
+
 function buildInvoicePreview(o) {
   const shop = loadJSON(LS.shop, {});
   const isMailOrder = o.mailOrder && o.mailOrder.toString().toLowerCase() === 'true';
@@ -142,7 +169,7 @@ function buildInvoicePreview(o) {
   html = html.replace('{{fulfillment}}', escapeHtml(fulfillmentText));
   html = html.replace('{{{items_html}}}', generateItemsHtml(o));
   html = html.replace('{{total_formatted}}', formatMoney((o.total||0)+(o.shippingFee||0)));
-  html = html.replace('{{{payment_info}}}', escapeHtml(shop.paymentInfo||'—'));
+  html = html.replace('{{{payment_info}}}', generatePaymentInfoHtml(shop));
   html = html.replace('{{shop_name}}', escapeHtml(shop.shopName||''));
   return html;
 }

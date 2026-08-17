@@ -125,6 +125,51 @@ pre.tmpl{
 .shipping-fee-row input{width:100px;padding:4px 6px;font-size:12px;border:1.5px solid var(--ink);}
 
 /* ============================================================
+   QRIS LIST (DASHBOARD)
+   ============================================================ */
+.qris-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--paper);
+  padding: 12px;
+  border: 2px solid var(--ink);
+  margin-bottom: 10px;
+}
+.qris-item-top {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.qris-item-top input {
+  flex: 1;
+}
+.qris-remove-btn {
+  background: var(--warn);
+  color: #fff;
+  border: 2px solid var(--ink);
+  font-weight: 900;
+  cursor: pointer;
+  padding: 6px 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  box-shadow: 2px 2px 0 var(--ink);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.qris-remove-btn:hover {
+  transform: translate(-1px,-1px);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.qris-item-img {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  border: 2px solid var(--ink);
+  background: #fff;
+  margin-top: 4px;
+  display: none;
+}
+
+/* ============================================================
    FOOTER
    ============================================================ */
 .site-footer {

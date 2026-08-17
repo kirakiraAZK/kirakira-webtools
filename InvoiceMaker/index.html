@@ -42,9 +42,15 @@
         <input type="text" id="shopName" placeholder="My Shop" oninput="markShopDirty()">
         <label data-i18n="shop_prefix">Invoice Prefix</label>
         <input type="text" id="invoicePrefix" placeholder="INV-TOKO-" oninput="markShopDirty()">
-        <label data-i18n="shop_payment">Payment Info</label>
+        <label data-i18n="shop_payment">Payment Info (Text)</label>
         <textarea id="paymentInfo" rows="3" placeholder="Bank Transfer 1234567890 ..." oninput="markShopDirty()"></textarea>
-        <button id="btnSaveShop" class="btn dark" style="margin-top:10px;" onclick="saveShopDetails()" data-i18n="shop_save">Save Details</button>
+        
+        <h3 class="section" style="margin-top:16px; font-size:14px;" data-i18n="shop_qris_section">QRIS / Payment QR Codes</h3>
+        <p class="hint" style="margin-top:0;margin-bottom:8px;" data-i18n="shop_qris_hint">Add one or more direct image links for your QRIS codes.</p>
+        <div id="qrisListContainer"></div>
+        <button class="btn ghost" style="margin-top:4px; padding:6px 12px; font-size:12px; border-width:2px;" onclick="addQrisItem()" data-i18n="shop_qris_add">+ Add QRIS</button>
+
+        <button id="btnSaveShop" class="btn dark" style="margin-top:20px;" onclick="saveShopDetails()" data-i18n="shop_save">Save Details</button>
       </div>
 
       <!-- RIGHT: Workflow -->
