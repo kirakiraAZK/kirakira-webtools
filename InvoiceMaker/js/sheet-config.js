@@ -16,6 +16,34 @@ function restoreSheetCache(){
   fillMappingSelects();
 }
 
+function handleSheetUploadConfig(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const data = new Uint8Array(e.target.result);
+    const wb = XLSX.read(data, {type:'array'});
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, {defval:''});
+    if (rows.length === 0) { toast('File is empty/unrecognized'); return; }
+    const headers = Object.keys(rows[0]);
+    try {
+      saveJSON(LS.sheetCache, { name: file.name, rows, headers });
+    } catch(err) {
+      toast('File is too large to cache in browser.');
+      return;
+    }
+    currentRows = rows;
+    currentHeaders = headers;
+    document.getElementById('noSheetWarning').style.display = 'none';
+    document.getElementById('sheetConfigContainer').style.display = 'block';
+    renderDataPreview({ name: file.name, rows, headers });
+    fillMappingSelects();
+    toast(file.name + ' loaded!');
+  };
+  reader.readAsArrayBuffer(file);
+}
+
 function renderDataPreview(cache) {
   const hintEl = document.getElementById('dataPreviewHint');
   const wrapEl = document.getElementById('dataPreviewWrap');
@@ -69,12 +97,38 @@ function fillMappingSelects(){
   if (mapping.colMailOrder && currentHeaders.includes(mapping.colMailOrder)) document.getElementById('mapMailOrder').value = mapping.colMailOrder;
   if (mapping.colAddress && currentHeaders.includes(mapping.colAddress)) document.getElementById('mapAddress').value = mapping.colAddress;
 
+  updateShippingValueOptions(mapping.shippingValue);
   renderItemColumnMapping();
 }
 
 function guess(id, keywords){
   const m = currentHeaders.find(h=>keywords.some(k=>h.toLowerCase().includes(k)));
   if(m) document.getElementById(id).value = m;
+}
+
+function updateShippingValueOptions(restoreValue) {
+  const colMailOrder = document.getElementById('mapMailOrder').value;
+  const container = document.getElementById('shippingValueContainer');
+  const sel = document.getElementById('mapShippingValue');
+  if (!colMailOrder) {
+    container.style.display = 'none';
+    return;
+  }
+  // Collect unique non-empty values from this column
+  const uniqueVals = [...new Set(
+    currentRows.map(r => String(r[colMailOrder] || '').trim()).filter(v => v !== '')
+  )];
+  sel.innerHTML = uniqueVals.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+  container.style.display = 'block';
+
+  // Restore or auto-guess the shipping value
+  if (restoreValue && uniqueVals.includes(restoreValue)) {
+    sel.value = restoreValue;
+  } else {
+    const shippingKeywords = ['shipping', 'kirim', 'delivery', 'mail', 'true', 'paket', 'ekspedisi', 'dikirim', 'antar'];
+    const guessed = uniqueVals.find(v => shippingKeywords.some(k => v.toLowerCase().includes(k)));
+    if (guessed) sel.value = guessed;
+  }
 }
 
 function renderItemColumnMapping(){
@@ -125,12 +179,13 @@ function processOrders(){
   
   const colMailOrder=document.getElementById('mapMailOrder').value;
   const colAddress=document.getElementById('mapAddress').value;
+  const shippingValue = colMailOrder ? document.getElementById('mapShippingValue').value : '';
   
   const colMap = {};
   document.querySelectorAll('.itemColSelect').forEach(sel=>{
     if(sel.value) colMap[sel.dataset.col] = sel.value;
   });
-  saveJSON(LS.mapping, {colNama,colEmail,colMailOrder,colAddress,colMap});
+  saveJSON(LS.mapping, {colNama,colEmail,colMailOrder,colAddress,colMap,shippingValue});
 
   const items = loadJSON(LS.items, []);
   const priceMap = {}, labelMap = {};
@@ -155,7 +210,11 @@ function processOrders(){
     const nama = String(row[colNama]||'').trim();
     const email = String(row[colEmail]||'').trim();
     if(!nama || !email) return;
-    const mailOrder = colMailOrder ? String(row[colMailOrder]||'').trim() : '';
+    const rawMailOrder = colMailOrder ? String(row[colMailOrder]||'').trim() : '';
+    const isMailOrder = colMailOrder && shippingValue
+      ? rawMailOrder.toLowerCase() === shippingValue.toLowerCase()
+      : rawMailOrder.toLowerCase() === 'true';
+    const mailOrder = rawMailOrder || '';
     const address = colAddress ? String(row[colAddress]||'').trim() : '';
 
     const lines = [];
@@ -182,7 +241,7 @@ function processOrders(){
     const already = sentlog[hash];
     const invoiceNumber = already ? already.invoiceNumber : (shop.invoicePrefix||'INV-')+new Date().getFullYear()+'-'+String(seq++).padStart(4,'0');
     orders.push({
-      nama, email, mailOrder, address, lines, total, hash, invoiceNumber,
+      nama, email, mailOrder, isMailOrder, address, lines, total, hash, invoiceNumber,
       shippingFee: 0,
       status: already ? 'SENT' : (hasInvalid ? 'NEEDS REVIEW' : 'WAITING'),
       paid:false, paidAt:null, paidEmailStatus:'—'

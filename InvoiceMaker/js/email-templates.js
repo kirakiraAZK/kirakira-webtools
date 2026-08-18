@@ -158,8 +158,8 @@ function generatePaymentInfoHtml(shop) {
 
 function buildInvoicePreview(o) {
   const shop = loadJSON(LS.shop, {});
-  const isMailOrder = o.mailOrder && o.mailOrder.toString().toLowerCase() === 'true';
-  const fulfillmentText = isMailOrder ? 'Dikirim ke ' + o.address : 'Diambil di venue';
+  const isMailOrder = o.isMailOrder === true;
+  const fulfillmentText = isMailOrder ? 'Dikirim ke ' + o.address : (o.mailOrder && o.mailOrder.toLowerCase() !== 'true' && o.mailOrder.toLowerCase() !== 'false' ? o.mailOrder : 'Diambil di venue');
   
   let html = getInvoiceEmailJSTemplate();
   html = html.replace('{{{header_html}}}', generateHeaderHtml(shop));

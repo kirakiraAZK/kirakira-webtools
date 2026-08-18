@@ -259,7 +259,7 @@ function renderOrders(){
     const statusClass = o.status==='SENT'?'ok':(o.status==='WAITING'?'wait':(o.status==='NEEDS REVIEW'?'review':'warn'));
     const paidStatusClass = o.paid ? 'ok' : 'wait';
     const paidEmailClass = o.paidEmailStatus==='SENT'?'ok':(o.paidEmailStatus==='FAILED'?'warn':'wait');
-    const isMailOrder = o.mailOrder && o.mailOrder.toString().toLowerCase()==='true';
+    const isMailOrder = o.isMailOrder === true;
     const shippingCell = isMailOrder
       ? `<div class="shipping-fee-row">
            <span style="font-size:10px;font-weight:700;white-space:nowrap;">+ Fee</span>
@@ -272,7 +272,7 @@ function renderOrders(){
       <td>${idx+1}</td>
       <td>${escapeHtml(o.nama)}<div class="hint" style="margin:0;">${o.invoiceNumber}</div></td>
       <td><a href="mailto:${o.email}">${escapeHtml(o.email)}</a></td>
-      <td>${escapeHtml(o.mailOrder)}</td>
+      <td>${escapeHtml(isMailOrder ? 'Shipping' : (o.mailOrder || 'Pick up'))}</td>
       <td>${escapeHtml(o.address)}</td>
       <td>${shippingCell}</td>
       <td class="num">${formatMoney((o.total||0)+(o.shippingFee||0))}</td>
@@ -386,8 +386,8 @@ function sendInvoice(idx){
   const e = loadJSON(LS.emailjs, {});
   const shop = loadJSON(LS.shop, {});
   if(!e.serviceId || !e.templateIdInvoice || !e.publicKey){ toast(t('emailjs_not_configured')); return; }
-  const isMailOrder = o.mailOrder && o.mailOrder.toString().toLowerCase()==='true';
-  const fulfillmentText = isMailOrder ? 'Dikirim ke '+o.address : 'Diambil di venue';
+  const isMailOrder = o.isMailOrder === true;
+  const fulfillmentText = isMailOrder ? 'Dikirim ke '+o.address : (o.mailOrder && o.mailOrder.toLowerCase() !== 'true' && o.mailOrder.toLowerCase() !== 'false' ? o.mailOrder : 'Diambil di venue');
   
   emailjs.send(e.serviceId, e.templateIdInvoice, {
     email: o.email, to_name: o.nama, invoice_number: o.invoiceNumber,

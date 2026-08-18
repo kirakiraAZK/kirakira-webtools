@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 <div class="frame">
@@ -23,13 +24,24 @@
         <div style="font-size:32px;margin-bottom:8px;">📄</div>
         <p style="font-weight:bold; color:var(--warn);" data-i18n="no_sheet_warning">No spreadsheet uploaded yet.</p>
         <p data-i18n="no_sheet_hint">Go to Dashboard and upload an .xlsx file first.</p>
-        <a href="index.html"><button class="btn dark" style="margin-top:10px;" data-i18n="go_to_dashboard">Go to Dashboard</button></a>
+        <p class="hint" style="margin-top:12px;" data-i18n="upload_direct_hint">Or upload directly here:</p>
+        <label style="display:inline-block; margin-top:4px;">
+          <div class="btn dark" style="cursor:pointer; display:inline-block;" data-i18n="change_spreadsheet">Change Spreadsheet (.xlsx)</div>
+          <input type="file" accept=".xlsx,.xls" onchange="handleSheetUploadConfig(event)" style="display:none;">
+        </label>
+        <br><a href="index.html"><button class="btn ghost" style="margin-top:12px;" data-i18n="go_to_dashboard">Go to Dashboard</button></a>
     </div>
 
     <div id="sheetConfigContainer" style="display:none;">
       <!-- Data Preview -->
       <div id="dataPreviewSection">
-        <h2 class="section" data-i18n="data_preview">Data Preview</h2>
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:6px;">
+          <h2 class="section" style="margin:0;" data-i18n="data_preview">Data Preview</h2>
+          <label style="cursor:pointer;">
+            <span class="btn ghost" style="font-size:11px; padding:5px 10px; border-width:2px; cursor:pointer;" data-i18n="change_spreadsheet">Change Spreadsheet (.xlsx)</span>
+            <input type="file" accept=".xlsx,.xls" onchange="handleSheetUploadConfig(event)" style="display:none;">
+          </label>
+        </div>
         <p class="hint" id="dataPreviewHint"></p>
         <div class="data-preview-wrap" id="dataPreviewWrap"></div>
       </div>
@@ -37,7 +49,13 @@
       <div class="grid3" style="grid-template-columns:1fr 1fr;">
         <div><label data-i18n="name_column">Name Column *</label><select id="mapNama" onchange="renderItemColumnMapping()"></select></div>
         <div><label data-i18n="email_column">Email Column *</label><select id="mapEmail" onchange="renderItemColumnMapping()"></select></div>
-        <div><label data-i18n="mail_order_column">Mail Order / Delivery Column (Optional)</label><select id="mapMailOrder" onchange="renderItemColumnMapping()"><option value="">— None —</option></select></div>
+        <div><label data-i18n="mail_order_column">Mail Order / Delivery Column (Optional)</label><select id="mapMailOrder" onchange="renderItemColumnMapping(); updateShippingValueOptions();"><option value="">— None —</option></select>
+          <div id="shippingValueContainer" style="display:none; margin-top:10px; background:var(--paper); border:2px solid var(--ink); padding:10px;">
+            <label data-i18n="shipping_value_label">Which value means Shipping / Delivery?</label>
+            <select id="mapShippingValue"></select>
+            <p class="hint" style="margin-top:6px;" data-i18n="shipping_value_hint">Orders with this value will show address &amp; shipping fee. All other values will be treated as Event / Venue Pickup.</p>
+          </div>
+        </div>
         <div><label data-i18n="address_column">Address Column (Optional)</label><select id="mapAddress" onchange="renderItemColumnMapping()"><option value="">— None —</option></select></div>
       </div>
       
