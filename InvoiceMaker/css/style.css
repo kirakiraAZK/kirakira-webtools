@@ -205,7 +205,27 @@ pre.tmpl{
   box-shadow: 5px 5px 0 var(--ink);
 }
 .donate-btn:active {
-  transform: translate(1px, 1px);
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+.social-btn {
+  background: var(--paper);
+  color: var(--ink);
+  text-decoration: none;
+  padding: 6px 10px;
+  border: 2px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  transition: transform 0.08s, box-shadow 0.08s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.social-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.social-btn:active {
+  transform: translate(2px, 2px);
   box-shadow: 1px 1px 0 var(--ink);
 }
 
